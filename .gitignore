@@ -1,0 +1,40 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env        # 이 줄을 추가하여 .env 파일을 직접 무시합니다.
+.env*.local # 기존의 .env.local, .env.development.local 등도 계속 무시합니다.
+
+# typescript
+*.tsbuildinfo
+
+app-example
