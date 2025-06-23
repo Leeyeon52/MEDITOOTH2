@@ -1,47 +1,68 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from 'react-native'; // Platform 및 Alert 임포트
-import { useNavigation, StackNavigationProp } from '@react-navigation/native';
-import { RootStackParamList } from './index'; // 타입 임포트
-
-// HomeScreen에서 사용할 네비게이션 prop의 타입 정의
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen(): React.JSX.Element {
-  const navigation = useNavigation<HomeScreenNavigationProp>();
+  const router = useRouter();
+  const [remainingSeconds, setRemainingSeconds] = useState(15 * 60); // 15분
 
-  // 로그아웃 기능을 위한 예시 함수
+  const formatTime = (seconds: number) => {
+    const min = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const sec = (seconds % 60).toString().padStart(2, '0');
+    return `${min}:${sec}`;
+  };
+
+  const performLogout = () => {
+    console.log('자동 또는 수동 로그아웃 처리됨');
+    router.replace('/LoginScreen'); // 로그인 화면 경로 맞게 변경 필요
+  };
+
   const handleLogout = () => {
-    // 실제 로그아웃 로직 (예: 토큰 삭제, 상태 초기화 등)
-    const performLogout = () => {
-      // 여기에서 AsyncStorage.removeItem 또는 localStorage.removeItem 등을 수행합니다.
-      // 예시: localStorage.removeItem('userToken'); // 웹용
-      // 예시: await AsyncStorage.removeItem('userToken'); // 네이티브용 (import 필요)
-      console.log('사용자 로그아웃 처리');
-      navigation.navigate('Login'); // 로그인 화면으로 돌아가기
-    };
-
-    // 플랫폼에 따라 다른 알림 방식 사용
     if (Platform.OS === 'web') {
-      // 웹 환경
       const confirmLogout = window.confirm('정말로 로그아웃하시겠습니까?');
-      if (confirmLogout) {
-        performLogout();
-      }
+      if (confirmLogout) performLogout();
     } else {
-      // React Native (iOS/Android) 환경
       Alert.alert('로그아웃', '정말로 로그아웃하시겠습니까?', [
         { text: '취소', style: 'cancel' },
-        { text: '확인', onPress: performLogout } // 확인 시 로그아웃 로직 실행
+        { text: '확인', onPress: performLogout },
       ]);
     }
   };
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          performLogout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleMyPage = () => {
+    // 경로가 맞는지 반드시 확인하세요
+    router.push('/(tabs)/MyPage');
+  };
+
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleMyPage}>
+          <Text style={styles.headerButton}>마이페이지</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleLogout}>
+          <Text style={styles.headerButton}>로그아웃</Text>
+        </TouchableOpacity>
+        <Text style={styles.timerText}>{formatTime(remainingSeconds)}</Text>
+      </View>
+
       <Text style={styles.welcomeText}>MediTooth에 오신 것을 환영합니다!</Text>
       <Text style={styles.subText}>이제 앱의 주요 기능을 탐색할 수 있습니다.</Text>
 
-      {/* 예시: 메인 콘텐츠 영역 */}
       <View style={styles.contentArea}>
         <Text style={styles.contentTitle}>주요 기능</Text>
         <TouchableOpacity style={styles.featureButton}>
@@ -54,11 +75,6 @@ export default function HomeScreen(): React.JSX.Element {
           <Text style={styles.featureButtonText}>💬 의료진 상담</Text>
         </TouchableOpacity>
       </View>
-
-      {/* 로그아웃 버튼 */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>로그아웃</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -66,16 +82,34 @@ export default function HomeScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    backgroundColor: '#F0F8FF',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#F0F8FF', // 로그인/회원가입 화면과 동일한 배경색
+    gap: 10,
+    marginBottom: 20,
+  },
+  headerButton: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: '#4682B4',
+    fontWeight: 'bold',
+  },
+  timerText: {
+    fontSize: 14,
+    color: '#D9534F',
+    fontWeight: 'bold',
   },
   welcomeText: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#333333',
+    textAlign: 'center',
   },
   subText: {
     fontSize: 16,
@@ -84,7 +118,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   contentArea: {
-    width: '90%',
+    width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
     padding: 20,
@@ -99,11 +133,11 @@ const styles = StyleSheet.create({
   contentTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#4682B4', // SteelBlue
+    color: '#4682B4',
     marginBottom: 20,
   },
   featureButton: {
-    backgroundColor: '#E6F3FF', // 아주 연한 파란색
+    backgroundColor: '#E6F3FF',
     width: '100%',
     paddingVertical: 12,
     borderRadius: 8,
@@ -114,20 +148,7 @@ const styles = StyleSheet.create({
   },
   featureButtonText: {
     fontSize: 16,
-    color: '#4682B4', // SteelBlue
+    color: '#4682B4',
     fontWeight: '500',
-  },
-  logoutButton: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#D9534F', // 빨간색 계열 (경고, 종료 의미)
-    borderRadius: 8,
-    elevation: 3,
-  },
-  logoutButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
 });
