@@ -22,7 +22,7 @@ type RegistrationScreenNavigationProp = StackNavigationProp<RootStackParamList, 
 // IP 주소 확인: Windows - ipconfig, macOS/Linux - ifconfig 또는 ip a 명령 사용.
 // IP 주소를 변경한 후에는 반드시 앱을 완전히 재시작 (에뮬레이터/폰 종료 후 재실행) 해야 합니다!
 // ***********************************************************************************
-const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://172.17.128.1:3000';
+const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://0.0.0.0:3000';
 
 export default function RegistrationScreen(): React.JSX.Element {
   const navigation = useNavigation<RegistrationScreenNavigationProp>();
