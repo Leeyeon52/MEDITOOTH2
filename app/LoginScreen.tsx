@@ -17,7 +17,7 @@ type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'
 
 // 백엔드 서버의 URL (개발 환경에 따라 변경 필요)
 const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://0.0.0.0.0:3000';
-// YOUR_LOCAL_IP_ADDRESS는 개발 PC의 내부 IP 주소 (예: 192.168.0.100)로 바꿔야 합니다.
+
 
 export default function LoginScreen(): React.JSX.Element {
   const navigation = useNavigation<LoginScreenNavigationProp>();
