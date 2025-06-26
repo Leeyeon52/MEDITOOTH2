@@ -1,10 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert, BackHandler } from 'react-native';
 import { useRouter } from 'expo-router';
 
 export default function HomeScreen(): React.JSX.Element {
   const router = useRouter();
   const [remainingSeconds, setRemainingSeconds] = useState(15 * 60); // 15분
+
+  useEffect(() => {
+    // Android 물리 뒤로가기 처리 (앱 종료 방지 or 뒤로가기 시 경고)
+    const backAction = () => {
+      Alert.alert('앱 종료', '앱을 종료하시겠습니까?', [
+        { text: '아니오', style: 'cancel' },
+        { text: '예', onPress: () => BackHandler.exitApp() },
+      ]);
+      return true; // 기본 뒤로가기 동작 막음
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+    return () => backHandler.remove();
+  }, []);
 
   const formatTime = (seconds: number) => {
     const min = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -14,7 +29,7 @@ export default function HomeScreen(): React.JSX.Element {
 
   const performLogout = () => {
     console.log('자동 또는 수동 로그아웃 처리됨');
-    router.replace('/LoginScreen'); // 로그인 화면 경로 맞게 변경 필요
+    router.replace('/LoginScreen'); // 필요에 따라 경로 수정
   };
 
   const handleLogout = () => {
@@ -43,10 +58,9 @@ export default function HomeScreen(): React.JSX.Element {
     return () => clearInterval(interval);
   }, []);
 
-  const handleMyPage = () => {
-    // 경로가 맞는지 반드시 확인하세요
-    router.push('/(tabs)/MyPage');
-  };
+  const handleMyPage = () => router.push('/(tabs)/MyPage');
+  const handleTreatmentHistory = () => router.push('/TreatmentHistory');
+  const handleChatbot = () => router.push('/Chatbot');
 
   return (
     <View style={styles.container}>
@@ -54,9 +68,11 @@ export default function HomeScreen(): React.JSX.Element {
         <TouchableOpacity onPress={handleMyPage}>
           <Text style={styles.headerButton}>마이페이지</Text>
         </TouchableOpacity>
+
         <TouchableOpacity onPress={handleLogout}>
           <Text style={styles.headerButton}>로그아웃</Text>
         </TouchableOpacity>
+
         <Text style={styles.timerText}>{formatTime(remainingSeconds)}</Text>
       </View>
 
@@ -65,13 +81,16 @@ export default function HomeScreen(): React.JSX.Element {
 
       <View style={styles.contentArea}>
         <Text style={styles.contentTitle}>주요 기능</Text>
+
         <TouchableOpacity style={styles.featureButton}>
           <Text style={styles.featureButtonText}>🦷 진료 예약</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.featureButton}>
+
+        <TouchableOpacity style={styles.featureButton} onPress={handleTreatmentHistory}>
           <Text style={styles.featureButtonText}>📜 치료 기록 확인</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.featureButton}>
+
+        <TouchableOpacity style={styles.featureButton} onPress={handleChatbot}>
           <Text style={styles.featureButtonText}>💬 의료진 상담</Text>
         </TouchableOpacity>
       </View>
@@ -108,18 +127,18 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#333333',
+    color: '#333',
     textAlign: 'center',
   },
   subText: {
     fontSize: 16,
-    color: '#666666',
+    color: '#666',
     marginBottom: 40,
     textAlign: 'center',
   },
   contentArea: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
     borderRadius: 15,
     padding: 20,
     alignItems: 'center',

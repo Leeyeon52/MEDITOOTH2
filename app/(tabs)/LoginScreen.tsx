@@ -7,17 +7,25 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Platform
+  Platform,
 } from 'react-native';
 import { useNavigation, StackNavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from './index';
-import axios from 'axios'; // axios 임포트
+import axios from 'axios';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
-// 백엔드 서버의 URL (개발 환경에 따라 변경 필요)
-const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://172.17.128.1:3000';
-// YOUR_LOCAL_IP_ADDRESS는 개발 PC의 내부 IP 주소 (예: 192.168.0.100)로 바꿔야 합니다.
+const API_BASE_URL = (() => {
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:3000'; // Android 에뮬레이터
+  } else if (Platform.OS === 'ios') {
+    return 'http://localhost:3000'; // iOS 시뮬레이터
+  } else if (Platform.OS === 'web') {
+    return 'http://localhost:3000'; // 웹
+  }
+  // 실제 기기 등 기타 환경은 본인 PC IP로 변경 필요
+  return 'http://192.168.0.2:3000';
+})();
 
 export default function LoginScreen(): React.JSX.Element {
   const navigation = useNavigation<LoginScreenNavigationProp>();
@@ -27,35 +35,46 @@ export default function LoginScreen(): React.JSX.Element {
 
   const handleLogin = async () => {
     setError('');
-
     if (!email || !password) {
       setError('이메일과 비밀번호를 입력해주세요.');
       return;
     }
 
+    console.log('로그인 요청 시작:', { email, password });
+    console.log('요청 URL:', `${API_BASE_URL}/login`);
+
     try {
       const response = await axios.post(`${API_BASE_URL}/login`, {
         email,
-        password
+        password,
       });
 
+      console.log('로그인 응답:', response.data);
+
       if (response.status === 200) {
-        // 로그인 성공 시 (여기서 서버가 JWT 등을 반환한다면 저장)
         if (Platform.OS === 'web') {
           window.alert('로그인 성공!');
-          // localStorage.setItem('userToken', response.data.token); // 예시: 토큰 저장
+          // localStorage.setItem('userToken', response.data.token); // 필요시 저장
         } else {
           Alert.alert('로그인 성공', '환영합니다!', [{ text: '확인' }]);
-          // AsyncStorage.setItem('userToken', response.data.token); // 예시: 토큰 저장
+          // AsyncStorage.setItem('userToken', response.data.token);
         }
         navigation.navigate('Home');
-      }
-    } catch (err) {
-      console.error('로그인 요청 오류:', err);
-      if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.message || '로그인에 실패했습니다.');
       } else {
-        setError('네트워크 오류 또는 서버 응답이 없습니다.');
+        setError(`로그인 실패: 상태 코드 ${response.status}`);
+      }
+    } catch (err: unknown) {
+      console.error('로그인 요청 오류:', err);
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          setError(err.response.data.message || '로그인에 실패했습니다.');
+        } else if (err.request) {
+          setError('서버 응답이 없습니다. 네트워크 상태를 확인해주세요.');
+        } else {
+          setError('요청 중 오류가 발생했습니다.');
+        }
+      } else {
+        setError('알 수 없는 오류가 발생했습니다.');
       }
     }
   };

@@ -1,64 +1,62 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function MyPage(): React.JSX.Element {
-  const navigation = useNavigation();
+  const router = useRouter();
 
-  // 예시 사용자 정보 (실제로는 props나 Context, API 호출 등으로 받아와야 함)
   const user = {
     name: '홍길동',
     email: 'hong@example.com',
   };
 
   const handleLogout = () => {
-    Alert.alert('로그아웃', '로그아웃 하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '확인',
-        onPress: () => {
-          // 실제 로그아웃 처리 로직
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Login' }],
-          });
-        },
-      },
-    ]);
-  };
-
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      '회원 탈퇴',
-      '정말 회원 탈퇴를 하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
-      [
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('로그아웃 하시겠습니까?');
+      if (confirmed) {
+        router.replace('/LoginScreen'); // 로그인 화면 경로 확인
+      }
+    } else {
+      Alert.alert('로그아웃', '로그아웃 하시겠습니까?', [
         { text: '취소', style: 'cancel' },
         {
           text: '확인',
           onPress: () => {
-            // TODO: 탈퇴 처리 API 호출 및 상태 초기화 등
-            Alert.alert('탈퇴 완료', '회원 탈퇴가 완료되었습니다.');
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Login' }],
-            });
+            router.replace('/LoginScreen');
           },
-          style: 'destructive',
         },
-      ]
-    );
+      ]);
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('정말 회원 탈퇴를 하시겠습니까? 이 작업은 되돌릴 수 없습니다.');
+      if (confirmed) {
+        window.alert('회원 탈퇴가 완료되었습니다.');
+        router.replace('/LoginScreen'); // 로그인 화면 경로 확인
+      }
+    } else {
+      Alert.alert(
+        '회원 탈퇴',
+        '정말 회원 탈퇴를 하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+        [
+          { text: '취소', style: 'cancel' },
+          {
+            text: '확인',
+            onPress: () => {
+              Alert.alert('탈퇴 완료', '회원 탈퇴가 완료되었습니다.');
+              router.replace('/LoginScreen');
+            },
+            style: 'destructive',
+          },
+        ]
+      );
+    }
   };
 
   const handleGoBack = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      // 스택 초기화로 안전하게 Home 화면 이동 (화면 이름은 프로젝트에 맞게 수정하세요)
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
-      });
-    }
+    router.back();
   };
 
   return (
@@ -72,17 +70,11 @@ export default function MyPage(): React.JSX.Element {
 
       <Text style={styles.text}>사용자 정보, 설정, 예약 내역 등을 확인할 수 있습니다.</Text>
 
-      <TouchableOpacity
-        onPress={() => navigation.navigate('EditProfile')}
-        style={styles.actionButton}
-      >
+      <TouchableOpacity onPress={() => router.push('/EditProfile')} style={styles.actionButton}>
         <Text style={styles.actionButtonText}>개인정보 수정</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={() => navigation.navigate('ReservationList')}
-        style={styles.actionButton}
-      >
+      <TouchableOpacity onPress={() => router.push('/ReservationList')} style={styles.actionButton}>
         <Text style={styles.actionButtonText}>예약 내역 보기</Text>
       </TouchableOpacity>
 
@@ -90,10 +82,7 @@ export default function MyPage(): React.JSX.Element {
         <Text style={styles.actionButtonText}>로그아웃</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={handleDeleteAccount}
-        style={[styles.actionButton, styles.deleteButton]}
-      >
+      <TouchableOpacity onPress={handleDeleteAccount} style={[styles.actionButton, styles.deleteButton]}>
         <Text style={styles.actionButtonText}>회원 탈퇴</Text>
       </TouchableOpacity>
 
