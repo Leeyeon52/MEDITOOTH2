@@ -15,17 +15,9 @@ import axios from 'axios';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
-const API_BASE_URL = (() => {
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:3000'; // Android 에뮬레이터
-  } else if (Platform.OS === 'ios') {
-    return 'http://localhost:3000'; // iOS 시뮬레이터
-  } else if (Platform.OS === 'web') {
-    return 'http://localhost:3000'; // 웹
-  }
-  // 실제 기기 등 기타 환경은 본인 PC IP로 변경 필요
-  return 'http://192.168.0.2:3000';
-})();
+// 백엔드 서버의 URL (개발 환경에 따라 변경 필요)
+const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://172.17.128.1:3000';
+// YOUR_LOCAL_IP_ADDRESS는 개발 PC의 내부 IP 주소 (예: 192.168.0.100)로 바꿔야 합니다.
 
 export default function LoginScreen(): React.JSX.Element {
   const navigation = useNavigation<LoginScreenNavigationProp>();
