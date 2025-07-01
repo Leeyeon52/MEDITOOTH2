@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useNavigation, StackNavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from './index';
@@ -15,43 +16,39 @@ import axios from 'axios';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
-// 백엔드 서버의 URL (개발 환경에 따라 변경 필요)
-const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://172.17.128.1:3000';
-// YOUR_LOCAL_IP_ADDRESS는 개발 PC의 내부 IP 주소 (예: 192.168.0.100)로 바꿔야 합니다.
+// 개발 환경에 따라 API 주소 수정
+const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://172.22.240.1:3000';
 
 export default function LoginScreen(): React.JSX.Element {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [loginRecords, setLoginRecords] = useState<
+    { id: number; login_time: string; ip_address?: string }[]
+  >([]);
 
   const handleLogin = async () => {
     setError('');
+    setLoginRecords([]);
     if (!email || !password) {
       setError('이메일과 비밀번호를 입력해주세요.');
       return;
     }
 
-    console.log('로그인 요청 시작:', { email, password });
-    console.log('요청 URL:', `${API_BASE_URL}/login`);
-
     try {
-      const response = await axios.post(`${API_BASE_URL}/login`, {
-        email,
-        password,
-      });
-
-      console.log('로그인 응답:', response.data);
+      const response = await axios.post(`${API_BASE_URL}/login`, { email, password });
 
       if (response.status === 200) {
         if (Platform.OS === 'web') {
           window.alert('로그인 성공!');
-          // localStorage.setItem('userToken', response.data.token); // 필요시 저장
         } else {
           Alert.alert('로그인 성공', '환영합니다!', [{ text: '확인' }]);
-          // AsyncStorage.setItem('userToken', response.data.token);
         }
         navigation.navigate('Home');
+
+        // 로그인 기록 조회 API 호출 (예: /login_records?email=...)
+        fetchLoginRecords(email);
       } else {
         setError(`로그인 실패: 상태 코드 ${response.status}`);
       }
@@ -59,7 +56,7 @@ export default function LoginScreen(): React.JSX.Element {
       console.error('로그인 요청 오류:', err);
       if (axios.isAxiosError(err)) {
         if (err.response) {
-          setError(err.response.data.message || '로그인에 실패했습니다.');
+          setError(err.response.data?.message || '로그인에 실패했습니다.');
         } else if (err.request) {
           setError('서버 응답이 없습니다. 네트워크 상태를 확인해주세요.');
         } else {
@@ -71,8 +68,22 @@ export default function LoginScreen(): React.JSX.Element {
     }
   };
 
+  // 로그인 기록 조회 함수
+  const fetchLoginRecords = async (userEmail: string) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/login_records`, {
+        params: { email: userEmail },
+      });
+      if (res.status === 200) {
+        setLoginRecords(res.data.records);
+      }
+    } catch (error) {
+      console.error('로그인 기록 조회 오류:', error);
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>로그인</Text>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <TextInput
@@ -98,13 +109,25 @@ export default function LoginScreen(): React.JSX.Element {
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={styles.registerLink}>계정이 없으신가요? 회원가입</Text>
       </TouchableOpacity>
-    </View>
+
+      {loginRecords.length > 0 && (
+        <View style={styles.recordsContainer}>
+          <Text style={styles.recordsTitle}>최근 로그인 기록</Text>
+          {loginRecords.map((rec) => (
+            <View key={rec.id} style={styles.recordItem}>
+              <Text>로그인 시간: {new Date(rec.login_time).toLocaleString()}</Text>
+              <Text>IP 주소: {rec.ip_address ?? '알 수 없음'}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -157,5 +180,23 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 10,
     fontSize: 14,
+  },
+  recordsContainer: {
+    marginTop: 40,
+    width: '90%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 15,
+    borderColor: '#ADD8E6',
+    borderWidth: 1,
+  },
+  recordsTitle: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 10,
+    color: '#4682B4',
+  },
+  recordItem: {
+    marginBottom: 10,
   },
 });

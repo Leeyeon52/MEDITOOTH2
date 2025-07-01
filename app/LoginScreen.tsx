@@ -16,7 +16,7 @@ import axios from 'axios'; // axios 임포트
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
 // 백엔드 서버의 URL (개발 환경에 따라 변경 필요)
-const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://0.0.0.0.0:3000';
+const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://172.22.240.1:3000';
 
 
 export default function LoginScreen(): React.JSX.Element {
