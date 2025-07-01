@@ -4,7 +4,7 @@ import * as React from 'react';
 // 각 화면 컴포넌트 임포트
 // 현재 파일(index.tsx)과 같은 디렉토리 내에 있는 LoginScreen.tsx와 RegisterScreen.tsx를 임포트합니다.
 import HomeScreen from './(tabs)/HomeScreen'; // 로그인/회원가입 후 이동할 화면
-import LoginScreen from './LoginScreen';
+import LoginScreen from './(tabs)/LoginScreen';
 import RegisterScreen from './RegisterScreen';
 
 // 네비게이션 스택의 라우트 및 파라미터 타입 정의

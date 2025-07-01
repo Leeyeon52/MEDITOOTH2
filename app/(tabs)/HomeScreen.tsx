@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  View, Text, StyleSheet, TouchableOpacity, Platform, Alert, BackHandler 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  Alert,
+  BackHandler,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -9,36 +15,33 @@ export default function HomeScreen(): React.JSX.Element {
   const [remainingSeconds, setRemainingSeconds] = useState(15 * 60); // 15분
 
   useEffect(() => {
-    // Android 물리 뒤로가기 처리 (앱 종료 확인)
     const backAction = () => {
       Alert.alert('앱 종료', '앱을 종료하시겠습니까?', [
         { text: '아니오', style: 'cancel' },
         { text: '예', onPress: () => BackHandler.exitApp() },
       ]);
-      return true; // 기본 뒤로가기 동작 차단
+      return true;
     };
 
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
     return () => backHandler.remove();
   }, []);
 
-  // 남은 시간 포맷 (mm:ss)
   const formatTime = (seconds: number) => {
     const min = Math.floor(seconds / 60).toString().padStart(2, '0');
     const sec = (seconds % 60).toString().padStart(2, '0');
     return `${min}:${sec}`;
   };
 
-  // 로그아웃 처리 (자동, 수동 공통)
   const performLogout = () => {
-    console.log('로그아웃 처리 완료');
-    router.replace('/LoginScreen'); // 로그인 화면으로 이동
+    console.log('자동 또는 수동 로그아웃 처리됨');
+    router.replace('/LoginScreen');
   };
 
-  // 로그아웃 버튼 눌렀을 때 확인 팝업 띄우기
   const handleLogout = () => {
     if (Platform.OS === 'web') {
-      if (window.confirm('정말로 로그아웃하시겠습니까?')) performLogout();
+      const confirmLogout = window.confirm('정말로 로그아웃하시겠습니까?');
+      if (confirmLogout) performLogout();
     } else {
       Alert.alert('로그아웃', '정말로 로그아웃하시겠습니까?', [
         { text: '취소', style: 'cancel' },
@@ -47,10 +50,9 @@ export default function HomeScreen(): React.JSX.Element {
     }
   };
 
-  // 1초마다 타이머 감소, 0되면 자동 로그아웃
   useEffect(() => {
     const interval = setInterval(() => {
-      setRemainingSeconds(prev => {
+      setRemainingSeconds((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
           performLogout();
@@ -62,15 +64,12 @@ export default function HomeScreen(): React.JSX.Element {
     return () => clearInterval(interval);
   }, []);
 
-  // 각 기능 페이지 이동 핸들러
-  const handleMyPage = () => router.push('/(tabs)/MyPage');
-  const handleTreatmentHistory = () => router.push('/TreatmentHistory');
-  const handleChatbot = () => router.push('/Chatbot');
+  const handleNavigate = (path: string) => router.push(path);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleMyPage}>
+        <TouchableOpacity onPress={() => handleNavigate('/(tabs)/MyPage')}>
           <Text style={styles.headerButton}>마이페이지</Text>
         </TouchableOpacity>
 
@@ -87,21 +86,21 @@ export default function HomeScreen(): React.JSX.Element {
       <View style={styles.contentArea}>
         <Text style={styles.contentTitle}>주요 기능</Text>
 
-        <TouchableOpacity style={styles.featureButton}>
-          <Text style={styles.featureButtonText}>🦷 진료 예약</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.featureButton} onPress={handleTreatmentHistory}>
-          <Text style={styles.featureButtonText}>📜 치료 기록 확인</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.featureButton} onPress={handleChatbot}>
-          <Text style={styles.featureButtonText}>💬 의료진 상담</Text>
-        </TouchableOpacity>
+        <FeatureButton text="🧠 이미지 진단" onPress={() => handleNavigate('/ImageDiagnosis')} />
+        <FeatureButton text="📜 이전 진단 내역" onPress={() => handleNavigate('/DiagnosisHistory')} />
+        <FeatureButton text="🩺 비대면 진단 결과" onPress={() => handleNavigate('/RemoteDiagnosisResult')} />
+        <FeatureButton text="🏥 주변 치과 찾기" onPress={() => handleNavigate('/NearbyClinics')} />
+        {/* 💬 의료진 상담 (챗봇) 버튼 제거됨 */}
       </View>
     </View>
   );
 }
+
+const FeatureButton = ({ text, onPress }: { text: string; onPress: () => void }) => (
+  <TouchableOpacity style={styles.featureButton} onPress={onPress}>
+    <Text style={styles.featureButtonText}>{text}</Text>
+  </TouchableOpacity>
+);
 
 const styles = StyleSheet.create({
   container: {

@@ -34,15 +34,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore" // 👈 app/(tabs)/explore.tsx 필요
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="MyPage" // 👈 app/(tabs)/MyPage.tsx 필요
         options={{
           title: 'MyPage',

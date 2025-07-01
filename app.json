@@ -4,7 +4,7 @@
     "slug": "MediTooth",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/cdss-icon.png",   
+    "icon": "./assets/images/cdss-icon.png",
     "scheme": "meditooth",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -34,7 +34,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 
 type Message = {
@@ -14,39 +24,72 @@ export default function Chatbot() {
     { id: '1', text: '안녕하세요! 무엇을 도와드릴까요?', sender: 'bot' },
   ]);
   const [inputText, setInputText] = useState('');
+  const [isWaiting, setIsWaiting] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
+
+  const scrollToBottom = () => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const sendMessage = () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isWaiting) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputText,
       sender: 'user',
     };
-    setMessages((prev) => [...prev, userMessage]);
-    setInputText('');
 
-    // TODO: 챗봇 API 호출 후 답변 받기 (아래는 예시)
+    setMessages((prev) => [userMessage, ...prev]);
+    setInputText('');
+    setIsWaiting(true);
+
+    // 가상 로딩 메시지 추가
+    const loadingId = (Date.now() + 1).toString();
+    const loadingMessage: Message = {
+      id: loadingId,
+      text: '답변을 생성 중입니다...',
+      sender: 'bot',
+    };
+    setMessages((prev) => [loadingMessage, ...prev]);
+
+    // 실제 응답 예시
     setTimeout(() => {
-      const botReply: Message = {
-        id: (Date.now() + 1).toString(),
-        text: '답변 준비 중입니다. 잠시만 기다려주세요.',
-        sender: 'bot',
-      };
-      setMessages((prev) => [...prev, botReply]);
-    }, 1000);
+      // 로딩 메시지 제거 후 실제 답변 추가
+      setMessages((prev) =>
+        [
+          {
+            id: (Date.now() + 2).toString(),
+            text: 'AI 챗봇입니다. 현재 기능은 데모용이며, 의료진의 실제 상담과는 다를 수 있습니다.',
+            sender: 'bot',
+          },
+          ...prev.filter((msg) => msg.id !== loadingId),
+        ]
+      );
+      setIsWaiting(false);
+    }, 1500);
   };
 
   const renderItem = ({ item }: { item: Message }) => (
-    <View style={[styles.messageBubble, item.sender === 'user' ? styles.userBubble : styles.botBubble]}>
-      <Text style={item.sender === 'user' ? styles.userMessageText : styles.botMessageText}>
+    <View
+      style={[
+        styles.messageBubble,
+        item.sender === 'user' ? styles.userBubble : styles.botBubble,
+      ]}
+    >
+      <Text
+        style={
+          item.sender === 'user' ? styles.userMessageText : styles.botMessageText
+        }
+      >
         {item.text}
       </Text>
     </View>
   );
-
-  const handleBack = () => {
-    router.back();
-  };
 
   return (
     <KeyboardAvoidingView
@@ -55,19 +98,21 @@ export default function Chatbot() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
     >
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.backButton}>← 뒤로가기</Text>
         </TouchableOpacity>
         <Text style={styles.title}>의료진 상담 챗봇</Text>
-        <View style={{ width: 70 }} /> {/* 균형용 빈 공간 */}
+        <View style={{ width: 70 }} /> {/* 균형 맞춤용 */}
       </View>
 
       <FlatList
+        ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.chatArea}
-        inverted // 최신 메시지가 아래로 오도록 뒤집기
+        inverted
+        showsVerticalScrollIndicator={false}
       />
 
       <View style={styles.inputArea}>
@@ -78,9 +123,10 @@ export default function Chatbot() {
           onChangeText={setInputText}
           onSubmitEditing={sendMessage}
           returnKeyType="send"
+          editable={!isWaiting}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-          <Text style={styles.sendButtonText}>전송</Text>
+        <TouchableOpacity style={styles.sendButton} onPress={sendMessage} disabled={isWaiting}>
+          <Text style={styles.sendButtonText}>{isWaiting ? '...' : '전송'}</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
