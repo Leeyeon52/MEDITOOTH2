@@ -19,29 +19,40 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: {
-          // ✅ 하단 탭 바를 보이게 설정
           display: 'flex',
         },
       }}
     >
       <Tabs.Screen
-        name="index" // 👈 app/(tabs)/index.tsx
+        name="index" // ✅ app/(tabs)/index.tsx
         options={{
-          title: 'Home',
+          title: '홈',
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="house.fill" color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="MyPage" // 👈 app/(tabs)/MyPage.tsx 필요
+        name="MyPage" // ✅ app/(tabs)/MyPage.tsx
         options={{
-          title: 'MyPage',
+          title: '마이페이지',
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="person.fill" color={color} />
           ),
         }}
       />
+      {/* 추가 탭 예시 (있을 경우) */}
+      {/* 
+      <Tabs.Screen
+        name="Chatbot" // ✅ app/(tabs)/Chatbot.tsx
+        options={{
+          title: '챗봇',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="message.fill" color={color} />
+          ),
+        }}
+      />
+      */}
     </Tabs>
   );
 }

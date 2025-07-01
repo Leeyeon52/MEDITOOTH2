@@ -8,17 +8,18 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import axios from 'axios';
+
+const SERVER_URL = 'http://192.168.0.2:8000'; // ✅ 실제 FastAPI 주소로 변경
 
 export default function MyPage(): React.JSX.Element {
   const router = useRouter();
 
-  // 예시 유저 정보 (실제 구현 시 API 연동 필요)
   const user = {
     name: '홍길동',
-    email: 'hong@example.com',
+    email: 'hong@example.com', // 로그인한 유저 이메일로 변경
   };
 
-  // 로그아웃 확인 함수
   const confirmLogout = () => {
     if (Platform.OS === 'web') {
       if (window.confirm('로그아웃 하시겠습니까?')) {
@@ -32,25 +33,36 @@ export default function MyPage(): React.JSX.Element {
     }
   };
 
-  // 회원 탈퇴 확인 함수
+  const deleteAccount = async () => {
+    try {
+      const response = await axios.delete(`${SERVER_URL}/user/delete`, {
+        headers: { 'Content-Type': 'application/json' }, // ✅ 명시
+        data: { email: user.email }, // 👈 전달할 유저 정보
+      });
+
+      if (response.status === 200) {
+        Alert.alert('탈퇴 완료', '회원 탈퇴가 완료되었습니다.');
+        router.replace('/LoginScreen');
+      } else {
+        Alert.alert('에러', '회원 탈퇴 실패: ' + response.statusText);
+      }
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('에러', '서버와의 연결에 실패했습니다.');
+    }
+  };
+
   const confirmDeleteAccount = () => {
     const message = '정말 회원 탈퇴를 하시겠습니까?\n이 작업은 되돌릴 수 없습니다.';
+
     if (Platform.OS === 'web') {
       if (window.confirm(message)) {
-        window.alert('회원 탈퇴가 완료되었습니다.');
-        router.replace('/LoginScreen');
+        deleteAccount();
       }
     } else {
       Alert.alert('회원 탈퇴', message, [
         { text: '취소', style: 'cancel' },
-        {
-          text: '확인',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert('탈퇴 완료', '회원 탈퇴가 완료되었습니다.');
-            router.replace('/LoginScreen');
-          },
-        },
+        { text: '확인', style: 'destructive', onPress: deleteAccount },
       ]);
     }
   };
