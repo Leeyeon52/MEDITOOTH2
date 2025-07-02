@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,37 +7,55 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import axios from 'axios';
 
-const SERVER_URL = 'http://192.168.0.2:8000'; // ✅ 실제 FastAPI 주소로 변경
+const SERVER_URL = 'http://192.168.0.2:8000'; // ✅ FastAPI 주소
 
 export default function MyPage(): React.JSX.Element {
   const router = useRouter();
+  const [user, setUser] = useState({ name: '', email: '' });
 
-  const user = {
-    name: '홍길동',
-    email: 'hong@example.com', // 로그인한 유저 이메일로 변경
+  // ✅ 유저 정보 불러오기
+  const fetchUserInfo = async () => {
+    try {
+      const response = await axios.get(`${SERVER_URL}/user/account`);
+      const users = response.data.users;
+
+      if (users.length > 0) {
+        setUser(users[0]); // ✅ 로그인 유저 정보 추정
+      }
+    } catch (error) {
+      console.error('유저 정보 로드 실패:', error);
+    }
   };
 
+  // ✅ 마이페이지가 포커스될 때마다 정보 갱신
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserInfo();
+    }, [])
+  );
+
+  // ✅ 로그아웃 확인
   const confirmLogout = () => {
+    const logout = () => router.replace('/LoginScreen');
     if (Platform.OS === 'web') {
-      if (window.confirm('로그아웃 하시겠습니까?')) {
-        router.replace('/LoginScreen');
-      }
+      if (window.confirm('로그아웃 하시겠습니까?')) logout();
     } else {
       Alert.alert('로그아웃', '로그아웃 하시겠습니까?', [
         { text: '취소', style: 'cancel' },
-        { text: '확인', onPress: () => router.replace('/LoginScreen') },
+        { text: '확인', onPress: logout },
       ]);
     }
   };
 
+  // ✅ 회원 탈퇴 확인
   const deleteAccount = async () => {
     try {
       const response = await axios.delete(`${SERVER_URL}/user/delete`, {
-        headers: { 'Content-Type': 'application/json' }, // ✅ 명시
-        data: { email: user.email }, // 👈 전달할 유저 정보
+        headers: { 'Content-Type': 'application/json' },
+        data: { email: user.email },
       });
 
       if (response.status === 200) {
@@ -53,14 +71,11 @@ export default function MyPage(): React.JSX.Element {
   };
 
   const confirmDeleteAccount = () => {
-    const message = '정말 회원 탈퇴를 하시겠습니까?\n이 작업은 되돌릴 수 없습니다.';
-
+    const msg = '정말 회원 탈퇴를 하시겠습니까?\n이 작업은 되돌릴 수 없습니다.';
     if (Platform.OS === 'web') {
-      if (window.confirm(message)) {
-        deleteAccount();
-      }
+      if (window.confirm(msg)) deleteAccount();
     } else {
-      Alert.alert('회원 탈퇴', message, [
+      Alert.alert('회원 탈퇴', msg, [
         { text: '취소', style: 'cancel' },
         { text: '확인', style: 'destructive', onPress: deleteAccount },
       ]);
@@ -72,8 +87,9 @@ export default function MyPage(): React.JSX.Element {
       <Text style={styles.title}>마이페이지</Text>
 
       <View style={styles.profileBox}>
-        <Text style={styles.profileName}>{user.name}</Text>
-        <Text style={styles.profileEmail}>{user.email}</Text>
+        {/* 유저 이름과 이메일 표시 */}
+        <Text style={styles.profileName}>{user.name || '이름이 없습니다'}</Text>
+        <Text style={styles.profileEmail}>{user.email || '이메일이 없습니다'}</Text>
       </View>
 
       <TouchableOpacity

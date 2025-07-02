@@ -14,7 +14,12 @@ import { RootStackParamList } from './index';
 
 type RegistrationScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
 
-const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://172.22.240.1:3000';
+const API_BASE_URL =
+  Platform.OS === 'web'
+    ? 'http://localhost:8000'  // 웹에서는 localhost 사용
+    : Platform.OS === 'android'
+    ? 'http://10.0.2.2:8000'   // Android 에뮬레이터에서는 10.0.2.2 사용
+    : 'http://192.168.0.2:8000'
 
 export default function RegistrationScreen(): React.JSX.Element {
   const navigation = useNavigation<RegistrationScreenNavigationProp>();

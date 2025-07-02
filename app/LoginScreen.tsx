@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  Platform,
-  ScrollView,
-} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import axios from 'axios';
-import { RootStackParamList } from './index'; // 상대경로 확인 필요
+import React, { useState } from 'react';
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { RootStackParamList } from './index';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -26,13 +26,9 @@ export default function LoginScreen(): React.JSX.Element {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [secureEntry, setSecureEntry] = useState(true);
-  const [loginRecords, setLoginRecords] = useState<
-    { id: number; login_time: string; ip_address?: string }[]
-  >([]);
 
   const handleLogin = async () => {
     setError('');
-    setLoginRecords([]);
 
     if (!email || !password) {
       setError('이메일과 비밀번호를 입력해주세요.');
@@ -43,12 +39,24 @@ export default function LoginScreen(): React.JSX.Element {
       const res = await axios.post(`${API_BASE_URL}/login`, { email, password });
 
       if (res.status === 200) {
-        Platform.OS === 'web'
-          ? window.alert('로그인 성공!')
-          : Alert.alert('로그인 성공', '환영합니다!', [{ text: '확인' }]);
-
-        navigation.navigate('Home');
-        fetchLoginRecords(email);
+        if (Platform.OS === 'web') {
+          window.alert('로그인 성공!');
+          // 웹에서 화면 전환 시 navigation.reset 사용 (히스토리 초기화)
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+          });
+        } else {
+          Alert.alert('로그인 성공', '환영합니다!', [
+            {
+              text: '확인',
+              onPress: () => navigation.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              }),
+            },
+          ]);
+        }
       } else {
         setError(`로그인 실패: 상태 코드 ${res.status}`);
       }
@@ -69,21 +77,8 @@ export default function LoginScreen(): React.JSX.Element {
     }
   };
 
-  const fetchLoginRecords = async (userEmail: string) => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/login_records`, {
-        params: { email: userEmail },
-      });
-      if (res.status === 200) {
-        setLoginRecords(res.data.records);
-      }
-    } catch (error) {
-      console.error('로그인 기록 조회 오류:', error);
-    }
-  };
-
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.title}>로그인</Text>
 
       {error !== '' && <Text style={styles.errorText}>{error}</Text>}
@@ -121,18 +116,6 @@ export default function LoginScreen(): React.JSX.Element {
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={styles.registerLink}>계정이 없으신가요? 회원가입</Text>
       </TouchableOpacity>
-
-      {loginRecords.length > 0 && (
-        <View style={styles.recordsContainer}>
-          <Text style={styles.recordsTitle}>최근 로그인 기록</Text>
-          {loginRecords.map((rec) => (
-            <View key={rec.id} style={styles.recordItem}>
-              <Text>시간: {new Date(rec.login_time).toLocaleString()}</Text>
-              <Text>IP: {rec.ip_address ?? '알 수 없음'}</Text>
-            </View>
-          ))}
-        </View>
-      )}
     </ScrollView>
   );
 }
@@ -198,23 +181,5 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 10,
     fontSize: 14,
-  },
-  recordsContainer: {
-    marginTop: 40,
-    width: '90%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
-    borderColor: '#ADD8E6',
-    borderWidth: 1,
-  },
-  recordsTitle: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    marginBottom: 10,
-    color: '#4682B4',
-  },
-  recordItem: {
-    marginBottom: 10,
   },
 });
