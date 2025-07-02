@@ -140,3 +140,40 @@ app.listen(port, () => {
   console.log(`서버가 http://localhost:${port} 에서 실행 중입니다.`);
   console.log(`MySQL 데이터베이스에 성공적으로 연결되었습니다.`);
 });
+
+// --- 회원 탈퇴 API ---
+app.delete('/delete', async (req, res) => {
+  // 탈퇴 요청 로그 출력
+  console.log('>>> 회원 탈퇴 요청 수신됨. 요청 본문:', req.body);
+
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: '이메일을 입력해주세요.' });
+  }
+
+  try {
+    // 사용자 존재 여부 확인
+    const [rows] = await pool.execute(
+      'SELECT id FROM users WHERE email = ?',
+      [email]
+    );
+
+    if (rows.length === 0) {
+      console.log('탈퇴 실패: 해당 이메일의 사용자가 존재하지 않음.');
+      return res.status(404).json({ message: '존재하지 않는 사용자입니다.' });
+    }
+
+    // 사용자 삭제
+    const [result] = await pool.execute(
+      'DELETE FROM users WHERE email = ?',
+      [email]
+    );
+
+    console.log(`사용자 탈퇴 완료. 삭제된 행 수: ${result.affectedRows}`);
+    res.status(200).json({ message: '회원 탈퇴가 완료되었습니다.' });
+  } catch (error) {
+    console.error('회원 탈퇴 오류:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+});

@@ -7,7 +7,7 @@ app = FastAPI()
 # CORS 설정 (여러 출처에서의 요청을 허용)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 모든 출처 허용 (필요시 도메인 추가)
+    allow_origins=["*"],  # 모든 출처 허용, 실제 IP로 제한할 수도 있음
     allow_credentials=True,
     allow_methods=["*"],  # 모든 HTTP 메서드 허용
     allow_headers=["*"],  # 모든 헤더 허용

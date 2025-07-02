@@ -1,31 +1,29 @@
-import { useNavigation } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
-import axios from 'axios';
+// LoginScreen.tsx
 import React, { useState } from 'react';
 import {
-  Alert,
-  Platform,
-  ScrollView,
-  StyleSheet,
+  View,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  StyleSheet,
+  Alert,
+  Platform
 } from 'react-native';
+import { useNavigation, StackNavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from './index';
+import axios from 'axios'; // axios 임포트
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
-const API_BASE_URL = Platform.OS === 'web'
-  ? 'http://localhost:3000'
-  : 'http://172.22.240.1:3000';
+// 백엔드 서버의 URL (개발 환경에 따라 변경 필요)
+const API_BASE_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://172.17.128.1:3000';
+// YOUR_LOCAL_IP_ADDRESS는 개발 PC의 내부 IP 주소 (예: 192.168.0.100)로 바꿔야 합니다.
 
 export default function LoginScreen(): React.JSX.Element {
   const navigation = useNavigation<LoginScreenNavigationProp>();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [secureEntry, setSecureEntry] = useState(true);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   const handleLogin = async () => {
     setError('');
@@ -36,53 +34,36 @@ export default function LoginScreen(): React.JSX.Element {
     }
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/login`, { email, password });
+      const response = await axios.post(`${API_BASE_URL}/login`, {
+        email,
+        password
+      });
 
-      if (res.status === 200) {
+      if (response.status === 200) {
+        // 로그인 성공 시 (여기서 서버가 JWT 등을 반환한다면 저장)
         if (Platform.OS === 'web') {
           window.alert('로그인 성공!');
-          // 웹에서 화면 전환 시 navigation.reset 사용 (히스토리 초기화)
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Home' }],
-          });
+          // localStorage.setItem('userToken', response.data.token); // 예시: 토큰 저장
         } else {
-          Alert.alert('로그인 성공', '환영합니다!', [
-            {
-              text: '확인',
-              onPress: () => navigation.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-              }),
-            },
-          ]);
+          Alert.alert('로그인 성공', '환영합니다!', [{ text: '확인' }]);
+          // AsyncStorage.setItem('userToken', response.data.token); // 예시: 토큰 저장
         }
-      } else {
-        setError(`로그인 실패: 상태 코드 ${res.status}`);
+        navigation.navigate('Home');
       }
     } catch (err) {
       console.error('로그인 요청 오류:', err);
-
-      if (axios.isAxiosError(err)) {
-        if (err.response) {
-          setError(err.response.data?.message || '아이디 또는 비밀번호를 확인해주세요.');
-        } else if (err.request) {
-          setError('서버 응답이 없습니다. 네트워크 상태를 확인해주세요.');
-        } else {
-          setError('요청 처리 중 문제가 발생했습니다.');
-        }
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || '로그인에 실패했습니다.');
       } else {
-        setError('알 수 없는 오류가 발생했습니다.');
+        setError('네트워크 오류 또는 서버 응답이 없습니다.');
       }
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <View style={styles.container}>
       <Text style={styles.title}>로그인</Text>
-
-      {error !== '' && <Text style={styles.errorText}>{error}</Text>}
-
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <TextInput
         style={styles.input}
         placeholder="이메일 주소"
@@ -92,37 +73,27 @@ export default function LoginScreen(): React.JSX.Element {
         value={email}
         onChangeText={setEmail}
       />
-
-      <View style={styles.passwordContainer}>
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="비밀번호"
-          placeholderTextColor="#A9A9A9"
-          secureTextEntry={secureEntry}
-          value={password}
-          onChangeText={setPassword}
-        />
-        <TouchableOpacity onPress={() => setSecureEntry(!secureEntry)}>
-          <Text style={styles.toggleText}>
-            {secureEntry ? '보기' : '숨김'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
+      <TextInput
+        style={styles.input}
+        placeholder="비밀번호"
+        placeholderTextColor="#A9A9A9"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>로그인</Text>
       </TouchableOpacity>
-
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={styles.registerLink}>계정이 없으신가요? 회원가입</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -135,6 +106,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   input: {
+    width: '90%',
     height: 50,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
@@ -145,17 +117,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333333',
   },
-  passwordContainer: {
-    flexDirection: 'row',
-    width: '90%',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  toggleText: {
-    marginLeft: 10,
-    color: '#4682B4',
-    fontWeight: 'bold',
-  },
   button: {
     width: '90%',
     height: 50,
@@ -165,6 +126,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   buttonText: {
     color: '#FFFFFF',
