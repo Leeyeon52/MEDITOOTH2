@@ -21,32 +21,31 @@ export default function EditProfile(): React.JSX.Element {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const API_BASE_URL =
-  Platform.OS === 'web'
-    ? 'http://localhost:8000'  // 웹에서는 localhost 사용
-    : Platform.OS === 'android'
-    ? 'http://10.0.2.2:8000'   // Android 에뮬레이터에서는 10.0.2.2 사용
-    : 'http://192.168.0.2:8000'
+    Platform.OS === 'web'
+      ? 'http://localhost:8000'  // 웹에서는 localhost 사용
+      : Platform.OS === 'android'
+      ? 'http://10.0.2.2:8000'   // Android 에뮬레이터에서는 10.0.2.2 사용
+      : 'http://192.168.0.2:8000';  // 실제 IP 주소 사용
 
   // ✅ 이름 저장 처리
   const handleSave = async () => {
-  try {
-    const response = await axios.put(`${API_BASE_URL}/user/update`, {
-      email,
-      name,
-    });
+    try {
+      const response = await axios.put(`${API_BASE_URL}/user/update`, {
+        email,
+        name,
+      });
 
-    if (response.status === 200) {
-      Alert.alert('저장 완료', '이름이 성공적으로 수정되었습니다.');
-      navigation.goBack(); // 돌아가기
-    } else {
-      Alert.alert('에러', '이름 저장에 실패했습니다.');
+      if (response.status === 200) {
+        Alert.alert('저장 완료', '이름이 성공적으로 수정되었습니다.');
+        navigation.goBack(); // 돌아가기
+      } else {
+        Alert.alert('에러', '이름 저장에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('이름 저장 실패:', error);
+      Alert.alert('에러', '서버 오류로 저장에 실패했습니다.');
     }
-  } catch (error) {
-    console.error('이름 저장 실패:', error);
-    Alert.alert('에러', '서버 오류로 저장에 실패했습니다.');
-  }
-};
-
+  };
 
   // ✅ 비밀번호 변경 처리
   const handleChangePassword = async () => {
@@ -80,10 +79,7 @@ export default function EditProfile(): React.JSX.Element {
   const handleDeleteAccount = async () => {
     try {
       const response = await axios.delete(`${API_BASE_URL}/user/delete`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        data: { email },
+        params: { email }, // email을 쿼리 파라미터로 보내기
       });
 
       if (response.status === 200) {
