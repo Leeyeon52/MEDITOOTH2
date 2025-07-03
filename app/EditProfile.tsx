@@ -25,7 +25,7 @@ export default function EditProfile(): React.JSX.Element {
       ? 'http://localhost:8000'  // 웹에서는 localhost 사용
       : Platform.OS === 'android'
       ? 'http://10.0.2.2:8000'   // Android 에뮬레이터에서는 10.0.2.2 사용
-      : 'http://192.168.0.2:8000';  // 실제 IP 주소 사용
+      : 'http://192.168.0.2:8000';
 
   // ✅ 이름 저장 처리
   const handleSave = async () => {
@@ -79,7 +79,7 @@ export default function EditProfile(): React.JSX.Element {
   const handleDeleteAccount = async () => {
     try {
       const response = await axios.delete(`${API_BASE_URL}/user/delete`, {
-        params: { email }, // email을 쿼리 파라미터로 보내기
+        data: { email }, // email을 body로 보내기
       });
 
       if (response.status === 200) {
